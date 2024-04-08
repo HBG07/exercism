@@ -1,4 +1,7 @@
 /// <reference path="./global.d.ts" />
+
+import { AbusiveClientError } from "./errors";
+
 // @ts-check
 //
 // The lines above enable type checking for this file. Various IDEs interpret
@@ -66,10 +69,24 @@ export class TranslationService {
    */
   request(text) {
     return new Promise((resolve, reject) => {
-      return this.api.request(text, (err) => {
-        if (err) reject(err);
-        resolve(undefined);
-      });
+      let tries = 0;
+      let error = null;
+      while (tries < 3) {
+        this.api.request(text, (err) => {
+          error = err;
+        });
+        console.log(tries, text, error);
+        if (!error) {
+          resolve(undefined);
+          break;
+        } else {
+          tries++;
+          if (tries == 3) {
+            reject(error);
+            break;
+          }
+        }
+      }
     });
   }
 
